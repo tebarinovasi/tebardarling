@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - TEBARDARLING</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Konfigurasi awal untuk mode gelap, mencegah FOUC (flash of unstyled content)
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
+    
+    <!-- LeafletJS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom Styles for a Professional Look */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark body {
+            background-color: #0f172a; /* slate-900 */
+        }
+        .leaflet-container {
+            height: 500px; /* Increased height for better view */
+            width: 100%;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            z-index: 1;
+        }
+        .dark .leaflet-container {
+            border-color: #334155; /* slate-700 */
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 50; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.7); 
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 3% auto;
+            padding: 2rem;
+            width: 95%;
+            max-width: 800px;
+            border-radius: 1rem;
+            animation: slideIn 0.4s ease-out;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .dark .modal-content {
+            background-color: #1e293b; /* slate-800 */
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header {
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0; /* slate-200 */
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dark .modal-header {
+            border-color: #334155; /* slate-700 */
+        }
+
+        .close-button {
+            color: #94a3b8; /* slate-400 */
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #1e293b; /* slate-800 */
+        }
+        .dark .close-button:hover, .dark .close-button:focus {
+             color: #e2e8f0; /* slate-200 */
+        }
+
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            border: 2px solid white;
+        }
+        .status-active { background-color: #10b981; box-shadow: 0 0 8px #10b981; } /* emerald-500 */
+        .status-inactive { background-color: #f43f5e; box-shadow: 0 0 8px #f43f5e; } /* rose-500 */
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-baru { background-color: #38bdf8; color: white; } /* sky-400 */
+        .status-selesai { background-color: #22c55e; color: white; } /* green-500 */
+
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* [BARU] Styling untuk menu navigasi utama */
+        .main-nav-button {
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+        .main-nav-button.active {
+            border-bottom-color: #38bdf8; /* sky-400 */
+            color: #0c4a6e; /* sky-900 */
+            background-color: white;
+        }
+        .dark .main-nav-button.active {
+            color: #e0f2fe; /* sky-100 */
+            background-color: #1e293b; /* slate-800 */
+            border-bottom-color: #7dd3fc; /* sky-300 */
+        }
+        
+        .page-content {
+            display: none; /* Semua halaman disembunyikan secara default */
+            animation: fadeIn 0.5s;
+        }
+        .page-content.active {
+            display: block; /* Hanya halaman aktif yang ditampilkan */
+        }
+    </style>
+</head>
+<body class="custom-scrollbar">
+    <div class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-green-600 to-emerald-500 text-white p-6 rounded-2xl shadow-lg flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold">Dashboard TEBARDARLING</h1>
+                <p class="opacity-90 mt-1">Manajemen & Pemantauan Petugas Lapangan Real-time</p>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <button id="theme-toggle" class="w-12 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
+                    <i class="fas fa-sun text-xl"></i>
+                </button>
+                <button id="globalRefreshButton" class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-full text-sm transition-all duration-300 flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    <span>Segarkan</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- [BARU] Menu Navigasi Utama -->
+        <nav class="bg-white dark:bg-slate-800 rounded-2xl shadow-md my-6 p-2 flex flex-wrap items-center justify-center md:justify-start gap-2 border border-slate-200/50 dark:border-slate-700/50">
+            <button data-target="page-dashboard" class="main-nav-button active font-semibold text-slate-600 dark:text-slate-300 py-3 px-5 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+            </button>
+            <button data-target="page-petugas" class="main-nav-button font-semibold text-slate-600 dark:text-slate-300 py-3 px-5 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-users"></i><span>Daftar Petugas</span>
+            </button>
+            <button data-target="page-laporan" class="main-nav-button font-semibold text-slate-600 dark:text-slate-300 py-3 px-5 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-recycle"></i><span>Laporan Warga</span>
+            </button>
+            <button data-target="page-peta" class="main-nav-button font-semibold text-slate-600 dark:text-slate-300 py-3 px-5 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-map-location-dot"></i><span>Peta Lokasi</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Layout -->
+        <main>
+            <!-- [DIUBAH] Page: Dashboard -->
+            <div id="page-dashboard" class="page-content active">
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                     <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 flex items-center space-x-4 transition-transform hover:scale-105">
+                        <div class="bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 p-4 rounded-full">
+                           <i class="fa-solid fa-users fa-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Petugas</h3>
+                            <p id="totalOfficers" class="text-4xl font-bold text-slate-800 dark:text-slate-100">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 flex items-center space-x-4 transition-transform hover:scale-105">
+                         <div class="bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 p-4 rounded-full">
+                           <i class="fa-solid fa-user-check fa-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase">Petugas Aktif</h3>
+                            <p id="activeOfficers" class="text-4xl font-bold text-green-600 dark:text-green-400">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 flex items-center space-x-4 transition-transform hover:scale-105">
+                         <div class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 p-4 rounded-full">
+                           <i class="fa-solid fa-camera-retro fa-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase">Dokumentasi Hari Ini</h3>
+                            <p id="docsToday" class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 flex items-center space-x-4 transition-transform hover:scale-105">
+                         <div class="bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 p-4 rounded-full">
+                           <i class="fa-solid fa-bullhorn fa-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase">Laporan Baru</h3>
+                            <p id="newReports" class="text-4xl font-bold text-amber-600 dark:text-amber-400">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [DIUBAH] Page: Daftar Petugas -->
+            <div id="page-petugas" class="page-content">
+                <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                        <h2 class="text-2xl font-bold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-list-ul mr-3 text-sky-500 dark:text-sky-400"></i>Daftar Petugas</h2>
+                        <div class="relative w-full sm:w-72">
+                             <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                             <input type="text" id="searchOfficerInput" placeholder="Cari petugas..." class="w-full pl-12 pr-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-full focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition placeholder:text-slate-400 dark:placeholder:text-slate-400">
+                        </div>
+                    </div>
+                    <!-- [DIUBAH] Table container with vertical scroll -->
+                    <div class="overflow-hidden">
+                        <table class="min-w-full">
+                            <thead class="bg-slate-50 dark:bg-slate-700 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Nama Petugas</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Waktu Aktif Terakhir</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            <table class="min-w-full">
+                                <tbody id="officersTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [DIUBAH] Page: Laporan Warga -->
+            <div id="page-laporan" class="page-content">
+                <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-recycle mr-3 text-green-500"></i>Laporan Warga</h2>
+                    </div>
+                    <!-- [DIUBAH] Table container with vertical scroll -->
+                    <div class="overflow-hidden">
+                         <table class="min-w-full">
+                            <thead class="bg-slate-50 dark:bg-slate-700 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Foto</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Alamat</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Keterangan</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Waktu Lapor</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            <table class="min-w-full">
+                               <tbody id="citizenReportsTableBody" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- [DIUBAH] Page: Peta Lokasi -->
+            <div id="page-peta" class="page-content">
+                <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-map-location-dot mr-3 text-rose-500"></i>Peta Lokasi</h2>
+                    </div>
+                    <div id="adminMap" class="leaflet-container"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Officer Detail Modal (Tidak ada perubahan signifikan di sini) -->
+    <div id="officerDetailModal" class="modal">
+        <div class="modal-content custom-scrollbar">
+            <div class="modal-header">
+                <h2 id="modalOfficerName" class="text-2xl font-bold text-slate-800 dark:text-slate-100">Detail Petugas</h2>
+                <span class="close-button" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <div class="tabs mb-4 border-b border-slate-200 dark:border-slate-700">
+                <button class="tab-button active" data-tab="attendanceLogTab"><i class="fa-solid fa-clipboard-list mr-2"></i>Log Absensi</button>
+                <button class="tab-button" data-tab="documentationTab"><i class="fa-solid fa-images mr-2"></i>Dokumentasi Kerja</button>
+                <button class="tab-button" data-tab="locationHistoryTab"><i class="fa-solid fa-timeline mr-2"></i>Riwayat Lokasi</button>
+            </div>
+
+            <div id="attendanceLogTab" class="tab-content active">
+                <div class="overflow-y-auto max-h-96 custom-scrollbar">
+                    <table class="min-w-full">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Masuk</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Keluar</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Durasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalAttendanceLog" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="documentationTab" class="tab-content">
+                <div id="modalDocumentation" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-96 custom-scrollbar p-1"></div>
+            </div>
+
+            <div id="locationHistoryTab" class="tab-content">
+                 <div id="modalLocationHistory" class="overflow-y-auto max-h-96 custom-scrollbar p-1"></div>
+            </div>
+
+             <div class="mt-8 text-right">
+                <button onclick="closeModal()" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-full transition-all">Tutup</button>
+             </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        const SUPABASE_URL = 'https://zunrijrufbpldgfztroz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1bnJpanJ1ZmJwbGRnZnp0cm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMjY4MzcsImV4cCI6MjA2NDYwMjgzN30.bUDiCIx-gM_nBUZWoU8N2311MlwQq7SOt1-fkyyWdbU';
+
+        if (!SUPABASE_URL || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')) {
+            alert("PENTING: Harap konfigurasi SUPABASE_URL dan SUPABASE_ANON_KEY dalam kode JavaScript!");
+        }
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- DOM Elements ---
+        const totalOfficersEl = document.getElementById('totalOfficers');
+        const activeOfficersEl = document.getElementById('activeOfficers');
+        const docsTodayEl = document.getElementById('docsToday');
+        const newReportsEl = document.getElementById('newReports');
+        const adminMapEl = document.getElementById('adminMap');
+        const officersTableBody = document.getElementById('officersTableBody');
+        const citizenReportsTableBody = document.getElementById('citizenReportsTableBody');
+        const searchOfficerInput = document.getElementById('searchOfficerInput');
+        const officerDetailModal = document.getElementById('officerDetailModal');
+        const modalOfficerName = document.getElementById('modalOfficerName');
+        const modalAttendanceLog = document.getElementById('modalAttendanceLog');
+        const modalDocumentation = document.getElementById('modalDocumentation');
+        const modalLocationHistory = document.getElementById('modalLocationHistory');
+        const globalRefreshButton = document.getElementById('globalRefreshButton');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = themeToggleBtn.querySelector('i');
+
+        // --- App State ---
+        let adminMap = null;
+        let officerMarkers = {};
+        let allOfficersData = []; 
+        let lightTiles, darkTiles;
+
+        // --- Dark Mode ---
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggleIcon.classList.remove('fa-sun');
+                themeToggleIcon.classList.add('fa-moon');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleIcon.classList.remove('fa-moon');
+                themeToggleIcon.classList.add('fa-sun');
+            }
+            if (adminMap) {
+                if (theme === 'dark' && !adminMap.hasLayer(darkTiles)) {
+                    adminMap.removeLayer(lightTiles);
+                    darkTiles.addTo(adminMap);
+                } else if (theme === 'light' && !adminMap.hasLayer(lightTiles)) {
+                    adminMap.removeLayer(darkTiles);
+                    lightTiles.addTo(adminMap);
+                }
+            }
+        };
+
+        themeToggleBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+        
+        // --- Initialization ---
+        async function initializeApp() {
+            console.log("Admin dashboard initialized.");
+            initAdminMap();
+            setupMainMenuNavigation(); // [BARU] Setup menu utama
+            loadAllData();
+            setupRealtimeListeners();
+            applyTheme(localStorage.getItem('theme') || 'light');
+            searchOfficerInput.addEventListener('input', () => renderOfficersTable(allOfficersData));
+            globalRefreshButton.addEventListener('click', () => {
+                const icon = globalRefreshButton.querySelector('i');
+                icon.classList.add('fa-spin');
+                loadAllData().finally(() => {
+                     setTimeout(() => icon.classList.remove('fa-spin'), 500);
+                });
+            });
+            setupModalTabs();
+        }
+
+        // [BARU] Setup fungsi navigasi menu utama
+        function setupMainMenuNavigation() {
+            const navButtons = document.querySelectorAll('.main-nav-button');
+            const pages = document.querySelectorAll('.page-content');
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Update style tombol
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const targetPageId = button.dataset.target;
+
+                    // Tampilkan halaman yang sesuai
+                    pages.forEach(page => {
+                        if (page.id === targetPageId) {
+                            page.classList.add('active');
+                        } else {
+                            page.classList.remove('active');
+                        }
+                    });
+
+                    // [PENTING] Re-render peta jika tab peta yang aktif
+                    if (targetPageId === 'page-peta' && adminMap) {
+                        setTimeout(() => {
+                            adminMap.invalidateSize();
+                        }, 10);
+                    }
+                });
+            });
+        }
+
+
+        function initAdminMap() {
+            if (adminMap) return;
+            const defaultLocation = [3.5952, 98.6722]; // Medan
+            adminMap = L.map(adminMapEl, { zoomControl: false }).setView(defaultLocation, 12);
+            lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; TEBARDARLING</a>', subdomains: 'abcd', maxZoom: 20
+            });
+            darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; TEBARDARLING</a>', subdomains: 'abcd', maxZoom: 20
+            });
+            if (document.documentElement.classList.contains('dark')) darkTiles.addTo(adminMap);
+            else lightTiles.addTo(adminMap);
+            L.control.zoom({ position: 'topright' }).addTo(adminMap);
+        }
+
+        async function loadAllData() {
+            // Memuat data petugas
+            officersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500 dark:text-slate-400"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Memuat data petugas...</p></td></tr>`;
+            try {
+                const { data: profiles, error: profileError } = await supabaseClient.from('profiles').select('id, full_name');
+                if (profileError) throw profileError;
+                const { data: attendance, error: attendanceError } = await supabaseClient.from('attendance').select('officer_id, clock_in_time, clock_out_time');
+                if (attendanceError) throw attendanceError;
+                const combinedData = profiles.map(profile => {
+                    const officerAttendances = attendance.filter(a => a.officer_id === profile.id);
+                    const lastAttendance = officerAttendances.sort((a, b) => new Date(b.clock_in_time) - new Date(a.clock_in_time))[0];
+                    return { id: profile.id, full_name: profile.full_name || 'Tanpa Nama', is_clocked_in: lastAttendance ? !lastAttendance.clock_out_time : false, last_active_time: lastAttendance ? lastAttendance.clock_in_time : null };
+                });
+                allOfficersData = combinedData;
+                renderOfficersTable(allOfficersData);
+                updateOfficerLocationsOnMap(allOfficersData);
+                updateStatistics(allOfficersData);
+            } catch (error) {
+                console.error("Gagal memuat data gabungan petugas:", error);
+                officersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-rose-500"><i class="fa-solid fa-circle-exclamation fa-2x"></i><p class="mt-2">Gagal memuat data petugas: ${error.message}</p></td></tr>`;
+            }
+
+            loadCitizenReports();
+        }
+
+        async function loadCitizenReports() {
+            citizenReportsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 dark:text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat laporan...</td></tr>`;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('laporan')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    citizenReportsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500 dark:text-slate-400">Belum ada laporan dari warga.</td></tr>';
+                    newReportsEl.textContent = '0';
+                    return;
+                }
+
+                citizenReportsTableBody.innerHTML = data.map(report => {
+                    const { data: { publicUrl } } = supabaseClient.storage.from('laporan').getPublicUrl(report.foto_path);
+                    const statusClass = report.status === 'Baru' ? 'status-baru' : 'status-selesai';
+                    
+                    // Gunakan `<td>` dengan kelas yang sama untuk menjaga lebar kolom
+                    return `
+                    <tr class="hover:bg-sky-50 dark:hover:bg-slate-700/50 transition-colors duration-200">
+                        <td class="px-6 py-4"><a href="${publicUrl}" target="_blank" rel="noopener noreferrer"><img src="${publicUrl}" class="h-16 w-16 object-cover rounded-lg shadow-sm" loading="lazy" onerror="this.src='https://placehold.co/100x100/e0e0e0/757575?text=Gagal';"></a></td>
+                        <td class="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 max-w-xs">${report.alamat}</td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 max-w-xs">${report.keterangan || '-'}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">${new Date(report.created_at).toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4"><span class="status-badge ${statusClass}">${report.status}</span></td>
+                        <td class="px-6 py-4">
+                            ${report.status === 'Baru' ? `<button onclick="window.updateReportStatus('${report.id}', 'Selesai')" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded-full transition-all">Tandai Selesai</button>` : `<span class="text-green-500 font-semibold"><i class="fas fa-check-circle"></i> Selesai</span>`}
+                        </td>
+                    </tr>
+                    `;
+                }).join('');
+
+                const newReportsCount = data.filter(r => r.status === 'Baru').length;
+                newReportsEl.textContent = newReportsCount;
+
+            } catch(error) {
+                console.error("Gagal memuat laporan warga:", error);
+                citizenReportsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-rose-500"><p>Gagal memuat laporan: ${error.message}</p></td></tr>`;
+            }
+        }
+        
+        window.updateReportStatus = async function(reportId, newStatus) {
+            const { error } = await supabaseClient
+                .from('laporan')
+                .update({ status: newStatus })
+                .eq('id', reportId);
+
+            if (error) {
+                alert(`Gagal memperbarui status: ${error.message}`);
+            } else {
+                console.log(`Laporan ${reportId} diperbarui menjadi ${newStatus}`);
+            }
+        }
+
+        function renderOfficersTable(officers) {
+            const searchTerm = searchOfficerInput.value.toLowerCase();
+            const filteredOfficers = officers.filter(o => o.full_name.toLowerCase().includes(searchTerm));
+            if (filteredOfficers.length === 0) {
+                officersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-500 dark:text-slate-400">Tidak ada petugas ditemukan.</td></tr>';
+                return;
+            }
+            officersTableBody.innerHTML = filteredOfficers.map(officer => {
+                const statusClass = officer.is_clocked_in ? 'status-active' : 'status-inactive';
+                const statusText = officer.is_clocked_in ? 'Aktif' : 'Nonaktif';
+                const lastActiveStr = officer.last_active_time ? new Date(officer.last_active_time).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Belum pernah';
+                return `<tr class="hover:bg-sky-50 dark:hover:bg-slate-700/50 transition-colors duration-200">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800 dark:text-slate-200"><div class="flex items-center"><span class="status-dot ${statusClass}"></span><span>${statusText}</span></div></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800 dark:text-slate-200">${officer.full_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${lastActiveStr}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><button onclick="window.viewOfficerDetails('${officer.id}', '${officer.full_name.replace(/'/g, "\\'")}')" class="text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 font-semibold">Lihat Detail</button></td>
+                </tr>`;
+            }).join('');
+        }
+        
+        async function updateOfficerLocationsOnMap(officers) {
+            Object.keys(officerMarkers).forEach(officerId => {
+                if (!officers.some(o => o.id === officerId && o.is_clocked_in)) {
+                    if(adminMap.hasLayer(officerMarkers[officerId])) adminMap.removeLayer(officerMarkers[officerId]);
+                    delete officerMarkers[officerId];
+                }
+            });
+            const activeOfficerIds = officers.filter(o => o.is_clocked_in).map(o => o.id);
+            if (activeOfficerIds.length === 0) return;
+            const { data: locations, error } = await supabaseClient.rpc('get_latest_officer_locations', { officer_ids: activeOfficerIds });
+            if (error) { console.error("Error fetching latest locations:", error); return; }
+            const customIcon = (officerName) => L.divIcon({ className: 'custom-div-icon', html: `<div class='bg-sky-500 text-white text-xs font-bold p-1 rounded-full w-8 h-8 flex items-center justify-center border-2 border-white shadow-lg'>${officerName.substring(0,2).toUpperCase()}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+            locations.forEach(loc => {
+                const officer = officers.find(o => o.id === loc.officer_id);
+                if (!officer) return;
+                const popupContent = `<div class='font-sans'><b class='text-base'>${officer.full_name}</b><br>Update: ${new Date(loc.max_timestamp).toLocaleTimeString('id-ID')}</div>`;
+                if (officerMarkers[loc.officer_id]) officerMarkers[loc.officer_id].setLatLng([loc.latitude, loc.longitude]).setPopupContent(popupContent);
+                else officerMarkers[loc.officer_id] = L.marker([loc.latitude, loc.longitude], { icon: customIcon(officer.full_name) }).addTo(adminMap).bindPopup(popupContent);
+            });
+        }
+
+        async function updateStatistics(officers) {
+            totalOfficersEl.textContent = officers.length;
+            activeOfficersEl.textContent = officers.filter(o => o.is_clocked_in).length;
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const { count, error } = await supabaseClient.from('work_documentation').select('*', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString());
+            if (error) console.error("Error fetching docs today count:", error);
+            docsTodayEl.textContent = error ? 'N/A' : (count || 0);
+        }
+
+        window.viewOfficerDetails = async function(officerId, officerName) {
+            modalOfficerName.textContent = `Detail: ${officerName}`;
+            document.querySelector('.tab-button[data-tab="attendanceLogTab"]').click();
+            officerDetailModal.style.display = "block";
+            modalAttendanceLog.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-slate-500 dark:text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
+            const { data: attendance, error: attError } = await supabaseClient.from('attendance').select('*').eq('officer_id', officerId).order('clock_in_time', { ascending: false });
+            if (attError) modalAttendanceLog.innerHTML = '<tr><td colspan="3" class="text-rose-500 text-center py-4">Gagal memuat absensi.</td></tr>';
+            else if (attendance.length === 0) modalAttendanceLog.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-slate-500 dark:text-slate-400">Tidak ada data.</td></tr>';
+            else modalAttendanceLog.innerHTML = attendance.map(log => `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">${new Date(log.clock_in_time).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">${log.clock_out_time ? new Date(log.clock_out_time).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' }) : '<span class="font-semibold text-green-500">Masih Bekerja</span>'}</td>
+                        <td class="px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">${log.work_duration_ms ? formatDuration(log.work_duration_ms) : '-'}</td>
+                    </tr>`).join('');
+            
+            modalDocumentation.innerHTML = '<p class="text-center col-span-full py-4 text-slate-500 dark:text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat...</p>';
+            const { data: docs, error: docError } = await supabaseClient.from('work_documentation').select('*').eq('officer_id', officerId).order('timestamp', { ascending: false });
+            if (docError) modalDocumentation.innerHTML = '<p class="text-rose-500 text-center col-span-full py-4">Gagal memuat dokumentasi.</p>';
+            else if (docs.length === 0) modalDocumentation.innerHTML = '<p class="text-center col-span-full py-4 text-slate-500 dark:text-slate-400">Tidak ada dokumentasi.</p>';
+            else {
+                modalDocumentation.innerHTML = docs.map(doc => {
+                    const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(doc.photo_path);
+                    return `<div class="border dark:border-slate-700 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+                        <a href="${publicUrl}" target="_blank" rel="noopener noreferrer"><img src="${publicUrl}" alt="Dokumentasi" class="w-full h-40 object-cover rounded-lg mb-2" loading="lazy" onerror="this.src='https://placehold.co/300x200/e0e0e0/757575?text=Gagal+Muat'; this.onerror=null;"></a>
+                        <p class="text-sm text-slate-700 dark:text-slate-300">${doc.description || 'Tidak ada deskripsi.'}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2"><i class="fa-regular fa-clock mr-1"></i>${new Date(doc.timestamp).toLocaleString('id-ID')}</p>
+                    </div>`;
+                }).join('');
+            }
+
+            modalLocationHistory.innerHTML = '<p class="text-center py-4 text-slate-500 dark:text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat...</p>';
+            const { data: locations, error: locError } = await supabaseClient.from('officer_locations').select('*').eq('officer_id', officerId).order('timestamp', { ascending: false }).limit(100);
+            if(locError) modalLocationHistory.innerHTML = '<p class="text-rose-500 text-center py-4">Gagal memuat riwayat.</p>';
+            else if (locations.length === 0) modalLocationHistory.innerHTML = '<p class="text-center py-4 text-slate-500 dark:text-slate-400">Tidak ada riwayat.</p>';
+            else modalLocationHistory.innerHTML = `<ul class="space-y-3">${locations.map(loc => `<li class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-md text-sm text-slate-600 dark:text-slate-300"><i class="fa-solid fa-location-dot text-sky-500 mr-3"></i>${new Date(loc.timestamp).toLocaleString('id-ID')} - <span class="font-mono text-xs">Lat: ${loc.latitude.toFixed(4)}, Lng: ${loc.longitude.toFixed(4)}</span></li>`).join('')}</ul>`;
+        }
+        
+        function formatDuration(ms) {
+            if (!ms) return '-';
+            let s = Math.floor((ms / 1000) % 60), m = Math.floor((ms / (1000 * 60)) % 60), h = Math.floor(ms / (1000 * 60 * 60));
+            return `${String(h).padStart(2, '0')}j ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}d`;
+        }
+
+        window.closeModal = function() { officerDetailModal.style.display = "none"; }
+        
+        function setupModalTabs() {
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    // Scope to modal tabs only
+                    button.closest('.modal-content').querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    button.closest('.modal-content').querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.add('active');
+                });
+            });
+        }
+
+        function setupRealtimeListeners() {
+            const channel = supabaseClient.channel('admin-dashboard-v3');
+            channel.on('postgres_changes', { event: '*', schema: 'public' }, payload => {
+                console.log('Perubahan terdeteksi:', payload.table);
+                if (['profiles', 'attendance', 'officer_locations', 'work_documentation'].includes(payload.table)) {
+                    loadAllData();
+                }
+                if (payload.table === 'laporan') {
+                    loadCitizenReports();
+                }
+            }).subscribe();
+        }
+
+        // Initialize the application
+        initializeApp();
+    </script>
+</body>
+</html>

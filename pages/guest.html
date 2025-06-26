@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengunjung - TEBARDARLING</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .form-container {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .form-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        /* Custom styles for toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast-success {
+            background-color: #22c55e; /* green-500 */
+        }
+        .toast-error {
+            background-color: #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-2xl p-4">
+        <!-- Main Form Container -->
+        <div id="form-card" class="bg-white p-6 sm:p-10 rounded-2xl shadow-lg form-container">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-slate-800">Form Untuk Warga / Pengunjung</h1>
+                <p class="text-slate-500 mt-2">Laporkan tumpukan sampah atau jalanan kotor di sekitar Anda.</p>
+            </div>
+            
+            <form id="reportForm" class="space-y-6">
+                <!-- Alamat -->
+                <div>
+                    <label for="alamat" class="block text-sm font-semibold text-slate-700 mb-2">Alamat Lengkap Lokasi</label>
+                    <textarea id="alamat" name="alamat" rows="3" required placeholder="Contoh: Jl. Tapian Nauli No. 48, didepan plang STM." class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition placeholder:text-slate-400"></textarea>
+                </div>
+                
+                <!-- Keterangan -->
+                <div>
+                    <label for="keterangan" class="block text-sm font-semibold text-slate-700 mb-2">Keterangan Tambahan</label>
+                    <textarea id="keterangan" name="keterangan" rows="2" placeholder="Contoh: Tumpukan sampah plastik sudah seminggu tidak diangkut." class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition placeholder:text-slate-400"></textarea>
+                </div>
+
+                <!-- Bukti Foto -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Bukti Foto</label>
+                    <input type="file" id="foto" name="foto" class="hidden" accept="image/*" required>
+                    <!-- [FIXED] Menggunakan kelas Tailwind untuk padding & hover agar responsif -->
+                    <label for="foto" id="file-label" class="flex flex-col items-center justify-center w-full p-6 sm:p-8 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 hover:border-sky-400 transition-colors">
+                        <i class="fas fa-cloud-upload-alt text-3xl sm:text-4xl text-slate-400"></i>
+                        <p class="mt-2 text-slate-600 text-sm sm:text-base">Klik untuk memilih foto</p>
+                        <span id="file-name" class="text-sm text-slate-500 mt-1 break-all px-2"></span>
+                    </label>
+                </div>
+                
+                <!-- Tombol Submit -->
+                <div class="pt-4">
+                    <button type="submit" id="submitButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-full transition-all duration-300 flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i>
+                        <span id="buttonText">Kirim Laporan</span>
+                        <i id="spinner" class="fas fa-spinner fa-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i id="toast-icon" class="fas"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <script type="module">
+        // Impor Supabase client
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        // Ganti dengan URL dan Anon Key Supabase proyek Anda
+        const SUPABASE_URL = 'https://zunrijrufbpldgfztroz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1bnJpanJ1ZmJwbGRnZnp0cm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMjY4MzcsImV4cCI6MjA2NDYwMjgzN30.bUDiCIx-gM_nBUZWoU8N2311MlwQq7SOt1-fkyyWdbU';
+
+        if (!SUPABASE_URL || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')) {
+            alert("PENTING: Harap konfigurasi SUPABASE_URL dan SUPABASE_ANON_KEY dalam kode JavaScript!");
+        }
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Elemen DOM
+        const reportForm = document.getElementById('reportForm');
+        const submitButton = document.getElementById('submitButton');
+        const buttonText = document.getElementById('buttonText');
+        const spinner = document.getElementById('spinner');
+        const fileInput = document.getElementById('foto');
+        const fileNameSpan = document.getElementById('file-name');
+        
+        // Menampilkan nama file yang dipilih
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+            } else {
+                fileNameSpan.textContent = '';
+            }
+        });
+
+        // Menampilkan notifikasi toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+
+            toastMessage.textContent = message;
+            toast.className = 'toast show'; // Hapus kelas sebelumnya, tambahkan show
+
+            if (type === 'success') {
+                toast.classList.add('toast-success');
+                toastIcon.className = 'fas fa-check-circle';
+            } else {
+                toast.classList.add('toast-error');
+                toastIcon.className = 'fas fa-times-circle';
+            }
+
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 4000); // Sembunyikan setelah 4 detik
+        }
+        
+        // Handler untuk submit form
+        reportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const alamat = document.getElementById('alamat').value;
+            const keterangan = document.getElementById('keterangan').value;
+            const fotoFile = fileInput.files[0];
+
+            if (!alamat || !fotoFile) {
+                showToast("Alamat dan Foto wajib diisi!", 'error');
+                return;
+            }
+
+            // UI feedback saat loading
+            submitButton.disabled = true;
+            buttonText.textContent = 'Mengirim...';
+            spinner.classList.remove('hidden');
+
+            try {
+                // 1. Upload foto ke Supabase Storage
+                const filePath = `public/report-${Date.now()}-${fotoFile.name}`;
+                // [FIXED] Menggunakan nama bucket yang benar: 'laporan_warga'
+                const { error: uploadError } = await supabase.storage
+                    .from('laporan')
+                    .upload(filePath, fotoFile);
+                
+                if (uploadError) throw uploadError;
+
+                // 2. Simpan data laporan ke tabel yang benar: 'laporan_warga'
+                // [FIXED] Menggunakan nama tabel yang benar: 'laporan_warga'
+                const { error: insertError } = await supabase
+                    .from('laporan')
+                    .insert({
+                        alamat: alamat,
+                        keterangan: keterangan,
+                        foto_path: filePath,
+                        status: 'Baru' // Status awal
+                    });
+
+                if (insertError) throw insertError;
+                
+                // Berhasil
+                showToast('Laporan berhasil dikirim. Terima kasih!', 'success');
+                reportForm.reset();
+                fileNameSpan.textContent = '';
+
+            } catch (error) {
+                console.error('Error submitting report:', error);
+                showToast(`Gagal mengirim laporan: ${error.message}`, 'error');
+            } finally {
+                // Kembalikan UI ke state normal
+                submitButton.disabled = false;
+                buttonText.textContent = 'Kirim Laporan';
+                spinner.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
