@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistem Terpadu TEBARDARLING</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden; /* Mencegah scroll karena slideshow */
+        }
+        
+        /* --- Slideshow Background --- */
+        #slideshow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+        }
+        #slideshow-container .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            will-change: opacity;
+        }
+        #slideshow-container .slide.active {
+            opacity: 1;
+        }
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.55);
+            z-index: -1;
+        }
+
+        /* --- Elemen UI dengan Warna Hijau --- */
+        :root {
+            --primary-green: #2E7D32; /* Hijau tua khas */
+            --secondary-green: #4CAF50; /* Hijau lebih cerah untuk hover/gradient */
+        }
+
+        /* --- Branding Column (Kiri) --- */
+        .brand-container {
+            background-color: var(--primary-green); /* Latar belakang diubah menjadi hijau */
+            z-index: 1;
+        }
+
+        .tab-button:after {
+            background-color: var(--primary-green);
+        }
+        .tab-button.active {
+            color: var(--primary-green);
+        }
+        
+        .form-input:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.2);
+        }
+
+        .submit-button {
+            background-color: var(--primary-green);
+            background-image: linear-gradient(to right, var(--primary-green) 0%, var(--secondary-green) 51%, var(--primary-green) 100%);
+            box-shadow: 0 4px 15px 0 rgba(46, 125, 50, 0.35);
+        }
+        .submit-button:hover {
+             box-shadow: 0 7px 20px 0 rgba(76, 175, 80, 0.4);
+        }
+         .submit-button:disabled {
+            background-color: #9CA3AF;
+            background-image: none;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .guest-button {
+             background-image: linear-gradient(to right, #43A047 0%, #66BB6A 51%, #43A047 100%);
+             box-shadow: 0 4px 15px 0 rgba(67, 160, 71, 0.35);
+        }
+        .guest-button:hover {
+            box-shadow: 0 7px 20px 0 rgba(102, 187, 106, 0.5);
+        }
+
+        /* Styling Umum (tidak berubah) */
+        .form-container { transition: all 0.3s ease-in-out; }
+        .tab-button { transition: all 0.3s ease; position: relative; padding-bottom: 8px; font-weight: 500; color: #4B5563; }
+        .tab-button:not(.active):hover { color: #1F2937; }
+        .tab-button:after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 3px; transition: width 0.3s ease; }
+        .tab-button.active:after { width: 100%; }
+        .form-input { background-color: #F9FAFB; border: 1px solid #D1D5DB; color: #1F2937; border-radius: 0.5rem; padding: 0.85rem 1rem; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; width: 100%; }
+        .submit-button { background-size: 200% auto; color: white; font-weight: 600; padding: 0.85rem 1.5rem; border-radius: 0.5rem; transition: all 0.4s ease; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; }
+        .submit-button:hover { background-position: right center; transform: translateY(-2px); }
+        .error-message { background-color: #FEF2F2; color: #DC2626; padding: 0.75rem 1rem; border-radius: 0.5rem; border-left: 4px solid #EF4444; font-size: 0.875rem; margin-top: 1rem; font-weight: 500; }
+        .loader { border: 3px solid rgba(255, 255, 255, 0.3); border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Kontainer untuk Slideshow Background -->
+    <div id="slideshow-container">
+        <!-- Gambar akan ditambahkan oleh JavaScript -->
+    </div>
+    <div class="background-overlay"></div>
+
+
+    <div class="min-h-screen flex items-center justify-center relative z-10">
+        <div class="w-full max-w-5xl flex flex-col md:flex-row shadow-2xl rounded-2xl overflow-hidden m-4">
+            
+            <!-- Kolom Kiri: Branding & Informasi -->
+            <div class="brand-container w-full md:w-2/5 text-white px-3 md:p-12 flex flex-col justify-center items-center">
+                <div class="w-full max-w-[150px] md:max-w-[500px]">
+                    <!-- HANYA LOGO YANG DITAMPILKAN -->
+                    <img src="/assets/logotbdg.png" alt="Logo TEBARDARLING" class="w-full h-full object-contain">
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Form Login -->
+            <div class="form-container w-full md:w-3/5 bg-white p-8 md:p-12">
+                
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Masuk ke Akun Anda</h2>
+                <p class="text-gray-600 mb-8">Silakan pilih peran Anda untuk melanjutkan.</p>
+
+                <!-- Tombol Tab -->
+                <div class="mb-8 flex space-x-8 border-b border-gray-200">
+                    <button id="tabPetugas" class="tab-button" onclick="showTab('petugas')">Petugas</button>
+                    <button id="tabAdmin" class="tab-button" onclick="showTab('admin')">Admin</button>
+                    <button id="tabPengunjung" class="tab-button" onclick="showTab('pengunjung')">Pengunjung</button>
+                </div>
+
+                <!-- Konten Tab -->
+                <div id="loginPetugasContent">
+                    <form id="petugasLoginForm" class="space-y-6">
+                        <div>
+                            <label for="petugasEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="petugasEmail" name="email" class="form-input" placeholder="email@contoh.com" required>
+                        </div>
+                        <div>
+                            <label for="petugasPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" id="petugasPassword" name="password" class="form-input" placeholder="••••••••" required>
+                        </div>
+                        <div id="petugasError" class="error-message hidden"></div>
+                        <button type="submit" id="petugasLoginButton" class="submit-button">
+                            <span class="button-text">Masuk sebagai Petugas</span>
+                            <div id="petugasLoader" class="loader hidden ml-3"></div>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="loginAdminContent" class="hidden">
+                    <form id="adminLoginForm" class="space-y-6">
+                        <div>
+                            <label for="adminUsername" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                            <input type="text" id="adminUsername" name="username" class="form-input" placeholder="username_admin" required>
+                        </div>
+                        <div>
+                            <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" id="adminPassword" name="password" class="form-input" placeholder="••••••••" required>
+                        </div>
+                        <div id="adminError" class="error-message hidden"></div>
+                        <button type="submit" id="adminLoginButton" class="submit-button">
+                            <span class="button-text">Masuk sebagai Admin</span>
+                            <div id="adminLoader" class="loader hidden ml-3"></div>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="loginPengunjungContent" class="hidden">
+                    <div class="text-center">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Lanjutkan sebagai Pengunjung</h3>
+                        <p class="text-gray-600 mb-6 max-w-sm mx-auto">
+                            Jelajahi informasi publik dan kegiatan TEBARDARLING tanpa perlu membuat akun.
+                        </p>
+                        <button id="guestLoginButton" class="submit-button guest-button max-w-xs mx-auto">Lanjutkan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Logika Slideshow Background ---
+            const slideshowContainer = document.getElementById('slideshow-container');
+            const images = [];
+            for (let i = 1; i <= 3; i++) {
+                images.push(`/assets/bg/kegiatan${i}.jpg`);
+            }
+
+            let currentImageIndex = 0;
+            const slideElements = [];
+
+            images.forEach((src, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'slide';
+                slide.style.backgroundImage = `url('${src}')`;
+                slideshowContainer.appendChild(slide);
+                slideElements.push(slide);
+            });
+
+            function showNextImage() {
+                slideElements[currentImageIndex].classList.remove('active');
+                currentImageIndex = (currentImageIndex + 1) % slideElements.length;
+                slideElements[currentImageIndex].classList.add('active');
+            }
+
+            if(slideElements.length > 0) {
+                slideElements[0].classList.add('active');
+                setInterval(showNextImage, 5000); // Ganti gambar setiap 5 detik
+            }
+
+            // Inisialisasi tab pertama
+            showTab('petugas');
+        });
+
+        // --- Inisialisasi Supabase Client ---
+        const SUPABASE_URL = 'https://zunrijrufbpldgfztroz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1bnJpanJ1ZmJwbGRnZnp0cm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMjY4MzcsImV4cCI6MjA2NDYwMjgzN30.bUDiCIx-gM_nBUZWoU8N2311MlwQq7SOt1-fkyyWdbU';
+
+        let supabaseClient = null;
+        try {
+            if (SUPABASE_URL.includes('MASUKKAN_URL') || SUPABASE_ANON_KEY.includes('MASUKKAN_ANON_KEY')) {
+                console.warn("PENTING: Konfigurasi Supabase belum lengkap.");
+                showError('petugasError', 'Peringatan: Konfigurasi Supabase belum lengkap.');
+            } else {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log("Supabase client berhasil diinisialisasi.");
+            }
+        } catch (error) {
+            console.error("Error saat inisialisasi Supabase client:", error);
+            showError('petugasError', 'Gagal menginisialisasi Supabase. Cek konsol.');
+        }
+
+
+        // --- Logika Tab ---
+        const tabs = ['petugas', 'admin', 'pengunjung'];
+        const tabButtons = {
+            petugas: document.getElementById('tabPetugas'),
+            admin: document.getElementById('tabAdmin'),
+            pengunjung: document.getElementById('tabPengunjung')
+        };
+        const tabContents = {
+            petugas: document.getElementById('loginPetugasContent'),
+            admin: document.getElementById('loginAdminContent'),
+            pengunjung: document.getElementById('loginPengunjungContent')
+        };
+
+        function showTab(tabName) {
+            tabs.forEach(tab => {
+                const isActive = tab === tabName;
+                tabButtons[tab].classList.toggle('active', isActive);
+                tabContents[tab].classList.toggle('hidden', !isActive);
+            });
+            hideError('petugasError');
+            hideError('adminError');
+        }
+
+        // --- Penanganan Pesan Error ---
+        function showError(elementId, message) {
+            const errorDiv = document.getElementById(elementId);
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function hideError(elementId) {
+            const errorDiv = document.getElementById(elementId);
+            if (errorDiv && !errorDiv.classList.contains('hidden')) {
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+            }
+        }
+        
+        // --- Penanganan Loader ---
+        function showLoader(loaderId, buttonId) {
+            const loader = document.getElementById(loaderId);
+            const button = document.getElementById(buttonId);
+            const buttonText = button.querySelector('.button-text');
+            if(loader) loader.classList.remove('hidden');
+            if(buttonText) buttonText.classList.add('hidden');
+            if(button) button.disabled = true;
+        }
+
+        function hideLoader(loaderId, buttonId) {
+            const loader = document.getElementById(loaderId);
+            const button = document.getElementById(buttonId);
+            const buttonText = button.querySelector('.button-text');
+            if(loader) loader.classList.add('hidden');
+            if(buttonText) buttonText.classList.remove('hidden');
+            if(button) button.disabled = false;
+        }
+
+
+        // --- Login Petugas (Integrasi Supabase) ---
+        const petugasLoginForm = document.getElementById('petugasLoginForm');
+        if (petugasLoginForm) {
+            petugasLoginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                hideError('petugasError');
+
+                if (!supabaseClient) {
+                    showError('petugasError', 'Konfigurasi Supabase tidak valid. Hubungi administrator.');
+                    return;
+                }
+
+                const email = document.getElementById('petugasEmail').value;
+                const password = document.getElementById('petugasPassword').value;
+
+                if (!email || !password) {
+                    showError('petugasError', 'Email dan password tidak boleh kosong.');
+                    return;
+                }
+
+                showLoader('petugasLoader', 'petugasLoginButton');
+
+                try {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password,
+                    });
+
+                    if (error) {
+                        console.error('Error login Supabase:', error);
+                        showError('petugasError', error.message || 'Login gagal. Periksa kembali email dan password Anda.');
+                        return;
+                    }
+
+                    if (data && data.user) {
+                        console.log('Login Petugas Berhasil:', data.user);
+                        alert('Login Petugas Berhasil! Anda akan diarahkan ke halaman petugas.');
+                        window.location.href = '/pages/petugas.html';
+                        petugasLoginForm.reset();
+                    } else {
+                         showError('petugasError', 'Terjadi respons yang tidak diharapkan dari server.');
+                    }
+                } catch (e) {
+                    console.error('Pengecualian saat login Supabase:', e);
+                    showError('petugasError', 'Terjadi kesalahan sistem saat mencoba login. Cek konsol.');
+                } finally {
+                    hideLoader('petugasLoader', 'petugasLoginButton');
+                }
+            });
+        }
+
+        // --- Login Admin (Data Lokal) ---
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        if (adminLoginForm) {
+            adminLoginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                hideError('adminError');
+                const username = document.getElementById('adminUsername').value;
+                const password = document.getElementById('adminPassword').value;
+
+                if (!username || !password) {
+                    showError('adminError', 'Username dan password tidak boleh kosong.');
+                    return;
+                }
+
+                showLoader('adminLoader', 'adminLoginButton');
+
+                const adminCredentials = {
+                    username: 'tebardarling',
+                    password: 'tbdg2025'
+                };
+
+                await new Promise(resolve => setTimeout(resolve, 700));
+
+                if (username === adminCredentials.username && password === adminCredentials.password) {
+                    console.log('Login Admin Berhasil');
+                    alert('Login Admin Berhasil! Anda akan diarahkan ke halaman admin.');
+                    window.location.href = '/pages/admin.html';
+                    adminLoginForm.reset();
+                } else {
+                    showError('adminError', 'Username atau password Admin salah.');
+                }
+                hideLoader('adminLoader', 'adminLoginButton');
+            });
+        }
+
+        // --- Login Pengunjung (Pengalihan) ---
+        const guestLoginButton = document.getElementById('guestLoginButton');
+        if (guestLoginButton) {
+            guestLoginButton.addEventListener('click', function() {
+                console.log('Mengalihkan ke halaman pengunjung...');
+                window.location.href = '/pages/guest.html';
+            });
+        }
+    </script>
+
+</body>
+</html>
