@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEBARDARLING - Teladan Barat Sadar Lingkungan</title>
+    <meta name="description" content="Gerakan kolaboratif warga Teladan Barat untuk menciptakan lingkungan yang lebih bersih, hijau, dan berkelanjutan.">
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Konfigurasi Tambahan Tailwind & Gaya Kustom -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-dark': '#0A0A0A',
+                        'brand-gray': '#1E1E1E',
+                        'brand-green': '#34D399', // emerald-400
+                        'brand-light-green': '#A7F3D0', // emerald-200
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Efek glow untuk teks hijau */
+        .text-glow {
+            text-shadow: 0 0 8px theme('colors.brand-green / 50%'), 0 0 20px theme('colors.brand-green / 30%');
+        }
+        /* Styling untuk modal video */
+        #video-modal.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-brand-dark text-white antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="fixed top-0 left-0 w-full z-50 bg-brand-dark/80 backdrop-blur-sm border-b border-gray-800 transition-all duration-300">
+        <div class="container mx-auto flex justify-between items-center py-4 px-6">
+            <a href="#">
+                <img src="/assets/logonavbar.png" alt="Logo TEBARDARLING" class="h-12">
+            </a>
+            <!-- Navigasi Desktop -->
+            <nav class="hidden md:flex space-x-8 items-center">
+                <a href="#program" class="text-gray-300 hover:text-brand-green transition-colors">Program</a>
+                <a href="#galeri" class="text-gray-300 hover:text-brand-green transition-colors">Galeri</a>
+                <a href="#tentang" class="text-gray-300 hover:text-brand-green transition-colors">Tentang</a>
+                <a href="#faq" class="text-gray-300 hover:text-brand-green transition-colors">FAQ</a>
+                <a href="/pages/login.html" class="bg-brand-green hover:bg-emerald-500 text-brand-dark font-bold py-2 px-5 rounded-lg transition-colors">
+                    Login Ke Sistem
+                </a>
+            </nav>
+            <!-- Tombol Menu Mobile -->
+            <button id="menu-btn" class="md:hidden text-white z-50" aria-label="Buka Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </div>
+        <!-- Menu Mobile -->
+        <div id="mobile-menu" class="hidden md:hidden fixed top-0 left-0 w-full h-screen bg-brand-dark">
+            <nav class="flex flex-col items-center justify-center h-full space-y-8 text-2xl">
+                <a href="#program" class="text-gray-300 hover:text-brand-green transition-colors">Program</a>
+                <a href="#galeri" class="text-gray-300 hover:text-brand-green transition-colors">Galeri</a>
+                <a href="#tentang" class="text-gray-300 hover:text-brand-green transition-colors">Tentang</a>
+                <a href="#faq" class="text-gray-300 hover:text-brand-green transition-colors">FAQ</a>
+                <a href="/pages/login.html" class="bg-brand-green hover:bg-emerald-500 text-brand-dark font-bold py-3 px-8 rounded-lg transition-colors">
+                    Login Ke Sistem
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative min-h-screen flex items-center justify-center text-center overflow-hidden px-6 pt-24">
+            <!-- Overlay Gelap -->
+            <div class="absolute inset-0 bg-black/60 z-10"></div>
+            <!-- Gambar Latar -->
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/assets/bg/bg.png');">
+                <!-- Fallback jika gambar gagal dimuat -->
+                <img src="https://placehold.co/1920x1080/000000/FFFFFF?text=Lingkungan+Asri" alt="[Gambar latar] Lingkungan yang asri dan bersih" class="w-full h-full object-cover" style="display:none;">
+            </div>
+            
+            <div class="relative z-20 container mx-auto flex flex-col items-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4 text-glow">
+                    Wujudkan Teladan Barat <br> <span class="text-brand-green">Bersih, Hijau & Lestari.</span>
+                </h1>
+                <p class="text-lg md:text-xl max-w-3xl text-gray-300 mb-8">
+                    TEBARDARLING adalah gerakan kita bersama. Sebuah inisiatif dari, oleh, dan untuk warga Kelurahan Teladan Barat demi masa depan lingkungan yang lebih baik.
+                </p>
+                <a href="/pages/login.html" class="bg-brand-green text-brand-dark text-lg font-bold py-4 px-10 rounded-lg hover:bg-emerald-500 transition-all transform hover:scale-105 shadow-lg shadow-brand-green/30">
+                    Login Ke Sistem
+                </a>
+            </div>
+        </section>
+        
+        <!-- Section "Didukung Oleh" -->
+        <section class="py-16 bg-black/30">
+            <div class="container mx-auto text-center px-6">
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">DIDUKUNG OLEH</h2>
+                <div class="flex flex-wrap justify-center items-center gap-x-12 sm:gap-x-16 gap-y-8">
+                    <!-- Ganti src dengan path logo Anda -->
+                    <img src="/assets/logopemko.svg" alt="PEMKO MEDAN" class="h-40 md:h-40">
+                    <img src="/assets/logopkk.png" alt="PKK" class="h-40 md:h-40">
+                    <img src="/assets/mus.png" alt="MEDANUNTUKSEMUA" class="h-12 md:h-24">
+                </div>
+                <div class="mt-16">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">WEB/IT DEVELOPING</h3>
+                    <!-- Ganti src dengan path logo Anda -->
+                    <img src="/assets/logocdk.png" alt="Logo Web Developer" class="h-40 md:h-40 mx-auto">
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Program Unggulan -->
+        <section id="program" class="py-20 md:py-28 px-6">
+            <div class="container mx-auto">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Program Unggulan TEBARDARLING</h2>
+                    <p class="text-gray-400 text-lg">Aksi nyata yang kami lakukan bersama warga untuk menciptakan perubahan positif yang berkelanjutan.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Kartu Program -->
+                    <div class="bg-brand-gray p-8 rounded-2xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300">
+                        <div class="bg-brand-green/10 inline-flex p-3 rounded-lg mb-4 border border-brand-green/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Bank Sampah Digital</h3>
+                        <p class="text-gray-400">Sampah anorganik disulap menjadi kerajinan. Menguntungkan warga dan menjadi UMKM lokal.</p>
+                    </div>
+                    <div class="bg-brand-gray p-8 rounded-2xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300">
+                        <div class="bg-brand-green/10 inline-flex p-3 rounded-lg mb-4 border border-brand-green/20">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Edukasi & Workshop</h3>
+                        <p class="text-gray-400">Sesi edukasi rutin tentang pemilahan sampah, pembuatan kompos, dan gaya hidup minim sampah.</p>
+                    </div>
+                    <div class="bg-brand-gray p-8 rounded-2xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300">
+                        <div class="bg-brand-green/10 inline-flex p-3 rounded-lg mb-4 border border-brand-green/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.28-1.25-1.44-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.28-1.25 1.44-1.857m0 0A5.002 5.002 0 0112 15a5.002 5.002 0 015.56-4.143m-11.12 0A5.002 5.002 0 0112 5a5.002 5.002 0 015.56 4.143" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Kerja Bakti Modern</h3>
+                        <p class="text-gray-400">Aksi bersih-bersih lingkungan terjadwal yang seru dan dilengkapi peralatan modern.</p>
+                    </div>
+                    <div class="bg-brand-gray p-8 rounded-2xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300">
+                        <div class="bg-brand-green/10 inline-flex p-3 rounded-lg mb-4 border border-brand-green/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-brand-green">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 9.75v1.5a6.75 6.75 0 01-6.75 6.75h-1.5a6.75 6.75 0 01-6.75-6.75v-1.5m15 0A2.25 2.25 0 0019.5 7.5h-15a2.25 2.25 0 00-2.25 2.25m15 0v-1.5A2.25 2.25 0 0019.5 6h-1.5a2.25 2.25 0 00-2.25 2.25v1.5" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Penghijauan Lorong</h3>
+                        <p class="text-gray-400">Mengubah lorong dan lahan kosong menjadi area hijau yang produktif dan sejuk dipandang.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Galeri Kegiatan -->
+        <section id="galeri" class="py-20 md:py-28 px-6 bg-black/50">
+            <div class="container mx-auto">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Galeri Kegiatan</h2>
+                    <p class="text-gray-400 text-lg">Momen-momen kebersamaan warga dalam aksi nyata untuk lingkungan Teladan Barat.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Foto Galeri 1 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan1.jpeg" alt="[Gambar] Sosialisasi program kepada warga" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                    <!-- Foto Galeri 2 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan2.jpeg" alt="[Gambar] Anak-anak belajar memilah sampah" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                    <!-- Foto Galeri 3 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan3.jpeg" alt="[Gambar] Warga melakukan kerja bakti membersihkan selokan" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                    <!-- Foto Galeri 4 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan4.jpeg" alt="[Gambar] Penanaman bibit pohon di lahan kosong" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                    <!-- Foto Galeri 5 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan5.jpeg" alt="[Gambar] Proses penimbangan sampah di Bank Sampah" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                    <!-- Foto Galeri 6 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan6.jpeg" alt="[Gambar] Workshop pembuatan kompos dari sampah organik" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                    <!-- Foto Galeri 7 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan7.jpeg" alt="[Gambar] Warga tersenyum dengan hasil panen dari kebun lorong" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                    <!-- Foto Galeri 8 -->
+                    <div class="group relative overflow-hidden rounded-2xl shadow-lg"><img src="/assets/kegiatan8.jpeg" alt="[Gambar] Momen kebersamaan warga setelah kegiatan" class="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div><p class="absolute bottom-0 left-0 p-4 font-medium text-white"></p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Testimoni -->
+        <section id="tentang" class="py-20 md:py-28 bg-brand-dark px-6">
+            <div class="container mx-auto">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Apa Kata Mereka?</h2>
+                    <p class="text-gray-400 text-lg">Dukungan dan apresiasi dari pimpinan wilayah dan warga Teladan Barat.</p>
+                </div>
+                <div class="space-y-20">
+                    <!-- Testimoni 1: Lurah -->
+                    <div class="grid lg:grid-cols-2 gap-12 items-center">
+                        <div class="relative lg:order-last">
+                            <svg class="absolute -top-4 -left-4 h-16 w-16 text-brand-green/30" fill="currentColor" viewBox="0 0 16 16"><path d="M12 12a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1h-1.388c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 9 7.558V11a1 1 0 0 0 1 1h2Zm-6 0a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1H4.612c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 3 7.558V11a1 1 0 0 0 1 1h2Z"/></svg>
+                            <p class="relative text-2xl font-medium text-white leading-relaxed mb-6">
+                                "Inovasi seperti TEBARDARLING adalah bukti nyata kekuatan gotong royong. Pemerintah Kelurahan sangat mendukung dan bangga dengan pencapaian ini."
+                            </p>
+                            <p class="font-bold text-lg text-brand-green">Juni Hardian S.Sos</p>
+                            <p class="text-gray-400">Lurah - Kelurahan Teladan Barat</p>
+                        </div>
+                        <div class="lg:pr-12">
+                            <img src="/assets/paklurah.jpeg" 
+                                 alt="[Foto] Lurah Teladan Barat" 
+                                 class="rounded-2xl shadow-2xl w-full h-full object-cover aspect-square"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/600x600/1E1E1E/FFFFFF?text=Lurah+Teladan+Barat';">
+                        </div>
+                    </div>
+                    <!-- Testimoni 2: Warga -->
+                    <div class="grid lg:grid-cols-2 gap-12 items-center">
+                        <div class="relative">
+                            <svg class="absolute -top-4 -left-4 h-16 w-16 text-brand-green/30" fill="currentColor" viewBox="0 0 16 16"><path d="M12 12a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1h-1.388c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 9 7.558V11a1 1 0 0 0 1 1h2Zm-6 0a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1H4.612c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 3 7.558V11a1 1 0 0 0 1 1h2Z"/></svg>
+                            <p class="relative text-2xl font-medium text-white leading-relaxed mb-6">
+                                "Gerakan ini benar-benar mengubah cara pandang kami terhadap sampah. Lorong kami sekarang lebih bersih, hijau, dan warganya semakin kompak."
+                            </p>
+                            <p class="font-bold text-lg text-brand-green">Budi Santoso</p>
+                            <p class="text-gray-400">Warga - Kelurahan Teladan Barat</p>
+                        </div>
+                        <div class="lg:pl-12">
+                            <img src="/assets/warga.png" 
+                                 alt="[Foto] Warga Teladan Barat tersenyum" 
+                                 class="rounded-2xl shadow-2xl w-full h-full object-cover aspect-square"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/600x600/1E1E1E/FFFFFF?text=Warga+Teladan+Barat';">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section FAQ -->
+        <section id="faq" class="py-20 md:py-28 px-6 bg-brand-gray/50">
+            <div class="container mx-auto max-w-4xl">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Pertanyaan Umum (FAQ)</h2>
+                    <p class="text-gray-400 text-lg">Temukan jawaban atas pertanyaan yang paling sering diajukan tentang TEBARDARLING.</p>
+                </div>
+                <div class="space-y-4">
+                    <!-- Item FAQ -->
+                    <details class="group bg-brand-gray p-6 rounded-lg border border-gray-800" open><summary class="flex justify-between items-center cursor-pointer font-medium text-lg list-none">Apa itu TEBARDARLING?<span class="text-brand-green transition-transform duration-300 group-open:rotate-180"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></span></summary><p class="mt-4 text-gray-300">TEBARDARLING (Teladan Barat Sadar Lingkungan) adalah sebuah gerakan lingkungan berbasis komunitas yang bertujuan untuk meningkatkan kesadaran dan partisipasi aktif warga Kelurahan Teladan Barat dalam pengelolaan sampah, penghijauan, dan pelestarian lingkungan.</p></details>
+                    <details class="group bg-brand-gray p-6 rounded-lg border border-gray-800" open><summary class="flex justify-between items-center cursor-pointer font-medium text-lg list-none">Bagaimana cara saya bergabung atau berpartisipasi?<span class="text-brand-green transition-transform duration-300 group-open:rotate-180"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></span></summary><p class="mt-4 text-gray-300">Saat ini TEBARDARLING hanya dapat digunakan oleh petugas Melati dan Bestari, namun anda bisa mulai dengan memilah sampah di rumah dan menyetorkannya ke Bank Sampah kami. Anda juga bisa mengikuti akun media sosial kami untuk info jadwal kerja bakti, workshop, atau menjadi relawan. Hubungi kami untuk informasi lebih lanjut.</p></details>
+                    </div>
+            </div>
+        </section>
+
+         <!-- Section Video Tutorial (Menggantikan CTA Final) -->
+        <section id="tutorial" class="py-20 md:py-28 px-6 bg-gradient-to-t from-emerald-900/40 to-transparent">
+            <div class="container mx-auto text-center max-w-3xl">
+                <h2 class="text-3xl md:text-5xl font-extrabold mb-4">Tutorial Penggunaan</h2>
+                <p class="text-lg md:text-xl max-w-2xl mx-auto text-gray-300 mb-10">
+                    Bingung cara penggunaan TEBARDARLING? Tonton video tutorial singkat kami.
+                </p>
+                <button id="open-video-modal" class="bg-brand-green text-brand-dark text-lg font-bold py-4 px-10 rounded-lg hover:bg-emerald-500 transition-all transform hover:scale-105 shadow-lg shadow-brand-green/30 inline-flex items-center space-x-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
+                    </svg>
+                    <span>Putar Video Tutorial</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal untuk Video Player -->
+    <div id="video-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-brand-gray rounded-2xl shadow-2xl w-full max-w-4xl aspect-video relative overflow-hidden">
+            <!-- Tombol Close -->
+            <button id="close-video-modal" class="absolute top-2 right-3 text-white hover:text-brand-green z-10 transition-colors" aria-label="Tutup Video">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <!-- Video Player -->
+            <video id="tutorial-video" class="w-full h-full" controls controlsList="nodownload" preload="none">
+                <source src="/assets/video.mp4" type="video/mp4">
+                Browser Anda tidak mendukung tag video.
+            </video>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer id="kontak" class="bg-brand-gray border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div>
+                <h3 class="text-xl font-bold mb-2">TEBAR<span class="text-brand-green">DARLING</span></h3>
+                <p class="text-gray-400">Teladan Barat Sadar Lingkungan</p>
+                <p class="text-gray-400 text-sm mt-2">Jl. Sisingamangaraja Gg. Mesjid No.19, Teladan Barat<br>Kec. Medan Kota, Kota Medan, Sumatera Utara 20212</p>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Tautan Cepat</h3>
+                <ul class="space-y-2">
+                    <li><a href="#program" class="text-gray-300 hover:text-brand-green transition-colors">Program</a></li>
+                    <li><a href="#galeri" class="text-gray-300 hover:text-brand-green transition-colors">Galeri</a></li>
+                    <li><a href="#tentang" class="text-gray-300 hover:text-brand-green transition-colors">Testimoni</a></li>
+                    <li><a href="#faq" class="text-gray-300 hover:text-brand-green transition-colors">FAQ</a></li>
+                </ul>
+            </div>
+            <div>
+                 <h3 class="text-lg font-semibold mb-4">Ikuti Kami</h3>
+                 <div class="flex justify-center md:justify-start space-x-4">
+                    <!-- Ganti # dengan link sosial media Anda -->
+                    <a href="https://www.facebook.com/kelurahan.telbar" class="text-gray-400 hover:text-brand-green" aria-label="Facebook"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg></a>
+                    <a href="https://www.instagram.com/kel_teladan_barat" class="text-gray-400 hover:text-brand-green" aria-label="Instagram"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.024.048-1.378.06-3.808.06s-2.784-.013-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363.465-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.08 2.525c.636-.247 1.363-.416 2.427-.465C9.53 2.013 9.884 2 12.315 2zM12 7a5 5 0 100 10 5 5 0 000-10zm0 8a3 3 0 110-6 3 3 0 010 6zm6.406-11.845a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5z" clip-rule="evenodd" /></svg></a>
+                 </div>
+            </div>
+        </div>
+        <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
+            <p>&copy; 2025 TEBARDARLING. Dibuat dengan ❤️ untuk lingkungan yang lebih baik.</p>
+        </div>
+    </footer>
+
+    <!-- Script Gabungan -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Script untuk Menu Mobile
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+
+            const toggleMenu = () => {
+                mobileMenu.classList.toggle('hidden');
+                const isMenuOpen = !mobileMenu.classList.contains('hidden');
+                document.body.style.overflow = isMenuOpen ? 'hidden' : 'auto';
+                menuBtn.innerHTML = isMenuOpen 
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>` 
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>`;
+            };
+
+            menuBtn.addEventListener('click', toggleMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        toggleMenu();
+                    }
+                });
+            });
+
+            // Script untuk Modal Video
+            const openModalBtn = document.getElementById('open-video-modal');
+            const closeModalBtn = document.getElementById('close-video-modal');
+            const videoModal = document.getElementById('video-modal');
+            const videoPlayer = document.getElementById('tutorial-video');
+
+            const openModal = () => {
+                videoModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Mencegah scroll di background
+                videoPlayer.play();
+            };
+
+            const closeModal = () => {
+                videoModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0; // Reset video ke awal
+            };
+
+            openModalBtn.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            
+            // Menutup modal jika klik di luar area video
+            videoModal.addEventListener('click', (event) => {
+                if (event.target === videoModal) {
+                    closeModal();
+                }
+            });
+
+            // Menutup modal dengan tombol Escape
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !videoModal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
