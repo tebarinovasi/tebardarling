@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Monitoring - TEBARDARLING</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- LeafletJS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Styles for a Professional Green & White Panel Look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4; /* green-50 */
+            color: #111827; /* gray-900 */
+        }
+        .leaflet-container {
+            height: 500px;
+            width: 100%;
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1px solid #dcfce7; /* green-100 */
+            z-index: 1;
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 100; 
+            left: 0; top: 0;
+            width: 100%; height: 100%; 
+            overflow: auto; 
+            background-color: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-content {
+            background-color: #f9fafb; /* gray-50 */
+            margin: 3% auto;
+            padding: 0;
+            width: 95%;
+            max-width: 800px;
+            border-radius: 0.75rem; /* rounded-xl */
+            animation: slideIn 0.4s ease-out;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            overflow: hidden;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-30px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        
+        .status-dot {
+            height: 10px; width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-active { background-color: #22c55e; } 
+        .status-inactive { background-color: #ef4444; }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .status-baru { background-color: #0ea5e9; color: white; }
+        .status-selesai { background-color: #16a34a; color: white; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #86efac; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #4ade80; }
+
+        .page-content, .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .page-content.active, .tab-content.active {
+            display: block;
+        }
+        
+        /* Image Lightbox Styles */
+        #imageLightboxModal .modal-content {
+            background: transparent;
+            box-shadow: none;
+            max-width: full;
+            max-height: full;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #lightboxImage {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flex h-screen bg-green-50">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-emerald-700 text-white flex flex-col fixed inset-y-0 left-0 z-40 transition-transform duration-300 md:translate-x-0 -translate-x-full">
+            <div class="flex items-center justify-center h-20 border-b border-emerald-600">
+                <i class="fa-solid fa-leaf text-3xl text-emerald-300"></i>
+                <h1 class="text-xl font-bold ml-3">PANEL<span class="font-light">DARLING</span></h1>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#" data-target="page-dashboard" class="nav-link active flex items-center py-3 px-4 rounded-lg transition-colors duration-200">
+                    <i class="fa-solid fa-chart-pie w-6 text-center text-lg"></i>
+                    <span class="ml-4 font-semibold">Dashboard</span>
+                </a>
+                <a href="#" data-target="page-petugas" class="nav-link flex items-center py-3 px-4 rounded-lg transition-colors duration-200">
+                    <i class="fa-solid fa-users w-6 text-center text-lg"></i>
+                    <span class="ml-4 font-semibold">Daftar Petugas</span>
+                </a>
+                <a href="#" data-target="page-laporan" class="nav-link flex items-center py-3 px-4 rounded-lg transition-colors duration-200">
+                    <i class="fa-solid fa-recycle w-6 text-center text-lg"></i>
+                    <span class="ml-4 font-semibold">Laporan Warga</span>
+                </a>
+                <a href="#" data-target="page-peta" class="nav-link flex items-center py-3 px-4 rounded-lg transition-colors duration-200">
+                    <i class="fa-solid fa-map-location-dot w-6 text-center text-lg"></i>
+                    <span class="ml-4 font-semibold">Peta Lokasi</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col md:ml-64">
+            <header class="bg-white/80 backdrop-blur-lg border-b border-emerald-100 p-4 h-20 flex items-center justify-between sticky top-0 z-30">
+                <div class="flex items-center">
+                    <button id="menu-toggle" class="md:hidden text-2xl mr-4 text-emerald-800"><i class="fas fa-bars"></i></button>
+                    <h2 id="page-title" class="text-2xl font-bold text-emerald-900">Dashboard</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="globalRefreshButton" class="w-10 h-10 flex items-center justify-center rounded-full text-emerald-600 hover:bg-emerald-100 transition-colors">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <div class="w-10 h-10 flex items-center justify-center font-bold text-emerald-800">
+                        <img src="/assets/logopemko.svg" alt="Logo TEBARDARLING" class="w-12 h-12">
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 p-6 lg:p-8 overflow-y-auto custom-scrollbar">
+                <div id="page-dashboard" class="page-content active">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-emerald-200 flex items-center gap-5 shadow-sm hover:shadow-lg transition-shadow duration-300">
+                            <div class="bg-emerald-100 text-emerald-600 w-14 h-14 flex items-center justify-center rounded-full">
+                               <i class="fa-solid fa-users fa-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-emerald-600 uppercase tracking-wider">Total Petugas</h3>
+                                <p id="totalOfficers" class="text-3xl font-extrabold text-emerald-900 mt-1">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-emerald-200 flex items-center gap-5 shadow-sm hover:shadow-lg transition-shadow duration-300">
+                            <div class="bg-emerald-100 text-emerald-600 w-14 h-14 flex items-center justify-center rounded-full">
+                               <i class="fa-solid fa-user-check fa-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-emerald-600 uppercase tracking-wider">Petugas Aktif</h3>
+                                <p id="activeOfficers" class="text-3xl font-extrabold text-emerald-900 mt-1">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-emerald-200 flex items-center gap-5 shadow-sm hover:shadow-lg transition-shadow duration-300">
+                            <div class="bg-emerald-100 text-emerald-600 w-14 h-14 flex items-center justify-center rounded-full">
+                               <i class="fa-solid fa-camera-retro fa-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-emerald-600 uppercase tracking-wider">Dokumentasi Hari Ini</h3>
+                                <p id="docsToday" class="text-3xl font-extrabold text-emerald-900 mt-1">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-emerald-200 flex items-center gap-5 shadow-sm hover:shadow-lg transition-shadow duration-300">
+                            <div class="bg-emerald-100 text-emerald-600 w-14 h-14 flex items-center justify-center rounded-full">
+                               <i class="fa-solid fa-bullhorn fa-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-emerald-600 uppercase tracking-wider">Laporan Baru</h3>
+                                <p id="newReports" class="text-3xl font-extrabold text-emerald-900 mt-1">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-petugas" class="page-content">
+                    <div class="bg-white p-6 rounded-xl border border-emerald-200 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                            <h3 class="text-xl font-bold text-emerald-900">Data Petugas Lapangan</h3>
+                            <div class="relative w-full sm:w-72">
+                                 <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400"></i>
+                                 <input type="text" id="searchOfficerInput" placeholder="Cari nama petugas..." class="w-full pl-11 pr-4 py-2.5 border border-emerald-300 bg-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-emerald-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Nama Petugas</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Waktu Aktif Terakhir</th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-emerald-700 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="officersTableBody" class="divide-y divide-emerald-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-laporan" class="page-content">
+                     <div class="bg-white p-6 rounded-xl border border-emerald-200 shadow-sm">
+                        <h3 class="text-xl font-bold text-emerald-900 mb-6">Laporan Kebersihan dari Warga</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-emerald-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Foto</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Alamat</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Keterangan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Waktu Lapor</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-emerald-700 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-emerald-700 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="citizenReportsTableBody" class="divide-y divide-emerald-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-peta" class="page-content">
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-emerald-200 shadow-sm">
+                        <h3 class="text-xl font-bold text-emerald-900 mb-4">Peta Lokasi Petugas Aktif</h3>
+                        <div id="adminMap" class="leaflet-container"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Officer Detail Modal -->
+    <div id="officerDetailModal" class="modal">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="bg-emerald-600 p-5 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <i class="fa-solid fa-user-shield text-3xl text-white/80"></i>
+                    <div>
+                        <h2 id="modalOfficerName" class="text-2xl font-bold text-white">Detail Petugas</h2>
+                        <p class="text-emerald-200 text-sm">Riwayat aktivitas dan dokumentasi.</p>
+                    </div>
+                </div>
+                <button class="text-3xl text-emerald-200 hover:text-white transition-colors" onclick="closeModal('officerDetailModal')">&times;</button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 bg-gray-50">
+                <!-- Tabs -->
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button class="tab-button active" data-tab="attendanceLogTab">
+                            <i class="fa-solid fa-clipboard-user mr-2"></i>Absensi
+                        </button>
+                        <button class="tab-button" data-tab="documentationTab">
+                            <i class="fa-solid fa-camera-retro mr-2"></i>Dokumentasi
+                        </button>
+                        <button class="tab-button" data-tab="locationHistoryTab">
+                            <i class="fa-solid fa-map-marker-alt mr-2"></i>Riwayat Lokasi
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="pt-6">
+                    <div id="attendanceLogTab" class="tab-content active overflow-y-auto max-h-[55vh] custom-scrollbar pr-2">
+                        <div id="modalAttendanceLog" class="space-y-4"></div>
+                    </div>
+
+                    <div id="documentationTab" class="tab-content overflow-y-auto max-h-[55vh] custom-scrollbar pr-2">
+                        <div id="modalDocumentation" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                    </div>
+
+                    <div id="locationHistoryTab" class="tab-content overflow-y-auto max-h-[55vh] custom-scrollbar pr-2">
+                         <div id="modalLocationHistory" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+             <!-- Modal Footer -->
+             <div class="p-4 bg-gray-100 border-t border-gray-200 text-right">
+                <button onclick="closeModal('officerDetailModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-lg transition-all shadow-md hover:shadow-lg">
+                    Tutup
+                </button>
+             </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div id="imageLightboxModal" class="modal" onclick="closeModal('imageLightboxModal')">
+        <div class="modal-content">
+            <img id="lightboxImage" src="" alt="Dokumentasi Diperbesar">
+        </div>
+    </div>
+    
+    <style>
+        /* Sidebar and Navigation Styles */
+        .nav-link { color: #d1fae5; }
+        .nav-link:hover { background-color: #065f46; color: #ffffff; }
+        .nav-link.active {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 4px 14px -1px rgb(16 185 129 / 0.2);
+        }
+        /* Modal Tab Styles - FIX for @apply rule */
+        .tab-button {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid transparent;
+            color: #6b7280; /* text-gray-500 */
+            white-space: nowrap;
+            padding: 0.75rem 0.25rem; /* py-3 px-1 */
+            font-weight: 500; /* font-medium */
+            font-size: 0.875rem; /* text-sm */
+            transition: color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .tab-button:hover {
+            color: #059669; /* hover:text-emerald-600 */
+            border-color: #6ee7b7; /* hover:border-emerald-300 */
+        }
+        .tab-button.active {
+            color: #059669; /* text-emerald-600 */
+            border-color: #10b981; /* border-emerald-500 */
+        }
+    </style>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        const SUPABASE_URL = 'https://zunrijrufbpldgfztroz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1bnJpanJ1ZmJwbGRnZnp0cm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMjY4MzcsImV4cCI6MjA2NDYwMjgzN30.bUDiCIx-gM_nBUZWoU8N2311MlwQq7SOt1-fkyyWdbU';
+
+        if (!SUPABASE_URL || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')) {
+            alert("PENTING: Harap konfigurasi SUPABASE_URL dan SUPABASE_ANON_KEY dalam kode JavaScript!");
+        }
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- DOM Elements ---
+        const totalOfficersEl = document.getElementById('totalOfficers');
+        const activeOfficersEl = document.getElementById('activeOfficers');
+        const docsTodayEl = document.getElementById('docsToday');
+        const newReportsEl = document.getElementById('newReports');
+        const adminMapEl = document.getElementById('adminMap');
+        const officersTableBody = document.getElementById('officersTableBody');
+        const citizenReportsTableBody = document.getElementById('citizenReportsTableBody');
+        const searchOfficerInput = document.getElementById('searchOfficerInput');
+        const officerDetailModal = document.getElementById('officerDetailModal');
+        const modalOfficerName = document.getElementById('modalOfficerName');
+        const modalAttendanceLog = document.getElementById('modalAttendanceLog');
+        const modalDocumentation = document.getElementById('modalDocumentation');
+        const modalLocationHistory = document.getElementById('modalLocationHistory');
+        const globalRefreshButton = document.getElementById('globalRefreshButton');
+        const pageTitle = document.getElementById('page-title');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const imageLightboxModal = document.getElementById('imageLightboxModal');
+        const lightboxImage = document.getElementById('lightboxImage');
+
+        // --- App State ---
+        let adminMap = null;
+        let officerMarkers = {};
+        let allOfficersData = []; 
+        
+        // --- Initialization ---
+        async function initializeApp() {
+            console.log("Panel Monitoring v5 (Revamped Modal) Initialized.");
+            initAdminMap();
+            setupNavigation();
+            loadAllData();
+            setupRealtimeListeners();
+            searchOfficerInput.addEventListener('input', () => renderOfficersTable(allOfficersData));
+            globalRefreshButton.addEventListener('click', () => {
+                const icon = globalRefreshButton.querySelector('i');
+                icon.classList.add('fa-spin');
+                loadAllData().finally(() => {
+                     setTimeout(() => icon.classList.remove('fa-spin'), 500);
+                });
+            });
+            setupModalTabs();
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
+
+        // --- Navigation ---
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page-content');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    const targetPageId = link.dataset.target;
+                    pageTitle.textContent = link.querySelector('span').textContent;
+
+                    pages.forEach(page => {
+                        page.classList.toggle('active', page.id === targetPageId);
+                    });
+
+                    if (targetPageId === 'page-peta' && adminMap) {
+                        setTimeout(() => adminMap.invalidateSize(), 10);
+                    }
+                    
+                    if(window.innerWidth < 768) {
+                        sidebar.classList.add('-translate-x-full');
+                    }
+                });
+            });
+        }
+
+        function initAdminMap() {
+            if (adminMap) return;
+            const defaultLocation = [3.5952, 98.6722]; // Medan
+            adminMap = L.map(adminMapEl, { zoomControl: false }).setView(defaultLocation, 12);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; TEBARDARLING', subdomains: 'abcd', maxZoom: 20
+            }).addTo(adminMap);
+            L.control.zoom({ position: 'bottomright' }).addTo(adminMap);
+        }
+
+        async function loadAllData() {
+            const loadingSpinner = `<tr><td colspan="4" class="text-center py-10 text-emerald-500"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-3 text-sm">Memuat data petugas...</p></td></tr>`;
+            officersTableBody.innerHTML = loadingSpinner;
+            
+            try {
+                const { data: profiles, error: profileError } = await supabaseClient.from('profiles').select('id, full_name');
+                if (profileError) throw profileError;
+
+                const { data: attendance, error: attendanceError } = await supabaseClient.from('attendance').select('officer_id, clock_in_time, clock_out_time');
+                if (attendanceError) throw attendanceError;
+
+                const combinedData = profiles.map(profile => {
+                    const officerAttendances = attendance.filter(a => a.officer_id === profile.id);
+                    const lastAttendance = officerAttendances.sort((a, b) => new Date(b.clock_in_time) - new Date(a.clock_in_time))[0];
+                    return { 
+                        id: profile.id, 
+                        full_name: profile.full_name || 'Tanpa Nama', 
+                        is_clocked_in: lastAttendance ? !lastAttendance.clock_out_time : false, 
+                        last_active_time: lastAttendance ? lastAttendance.clock_in_time : null 
+                    };
+                });
+
+                allOfficersData = combinedData;
+                renderOfficersTable(allOfficersData);
+                updateOfficerLocationsOnMap(allOfficersData);
+                updateStatistics(allOfficersData);
+            } catch (error) {
+                console.error("Gagal memuat data petugas:", error);
+                officersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-500"><i class="fa-solid fa-circle-exclamation fa-2x"></i><p class="mt-3 text-sm">Gagal memuat data: ${error.message}</p></td></tr>`;
+            }
+
+            loadCitizenReports();
+        }
+
+        async function loadCitizenReports() {
+            citizenReportsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-emerald-500"><i class="fas fa-spinner fa-spin"></i> Memuat laporan...</td></tr>`;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('laporan')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    citizenReportsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-emerald-500">Belum ada laporan dari warga.</td></tr>';
+                    newReportsEl.textContent = '0';
+                    return;
+                }
+
+                citizenReportsTableBody.innerHTML = data.map(report => {
+                    const { data: { publicUrl } } = supabaseClient.storage.from('laporan').getPublicUrl(report.foto_path);
+                    const statusClass = report.status === 'Baru' ? 'status-baru' : 'status-selesai';
+                    
+                    return `
+                    <tr class="hover:bg-emerald-50 transition-colors duration-200">
+                        <td class="px-6 py-4"><a href="${publicUrl}" target="_blank" rel="noopener noreferrer"><img src="${publicUrl}" class="h-14 w-14 object-cover rounded-md shadow-sm" loading="lazy" onerror="this.src='https://placehold.co/100x100/e2e8f0/475569?text=Error';"></a></td>
+                        <td class="px-6 py-4 text-sm text-gray-800 max-w-xs">${report.alamat}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">${report.keterangan || '-'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${new Date(report.created_at).toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4"><span class="status-badge ${statusClass}">${report.status}</span></td>
+                        <td class="px-6 py-4 text-right">
+                            ${report.status === 'Baru' ? `<button onclick="window.updateReportStatus('${report.id}', 'Selesai')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 rounded-full transition-all">Selesaikan</button>` : `<span class="text-green-600 font-semibold text-sm"><i class="fas fa-check-circle mr-1"></i>Selesai</span>`}
+                        </td>
+                    </tr>
+                    `;
+                }).join('');
+
+                newReportsEl.textContent = data.filter(r => r.status === 'Baru').length;
+
+            } catch(error) {
+                console.error("Gagal memuat laporan warga:", error);
+                citizenReportsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500"><p>Gagal memuat laporan: ${error.message}</p></td></tr>`;
+            }
+        }
+        
+        window.updateReportStatus = async function(reportId, newStatus) {
+            const { error } = await supabaseClient.from('laporan').update({ status: newStatus }).eq('id', reportId);
+            if (error) alert(`Gagal memperbarui status: ${error.message}`);
+        }
+
+        function renderOfficersTable(officers) {
+            const searchTerm = searchOfficerInput.value.toLowerCase();
+            const filteredOfficers = officers.filter(o => o.full_name.toLowerCase().includes(searchTerm));
+            if (filteredOfficers.length === 0) {
+                officersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-emerald-500">Tidak ada petugas ditemukan.</td></tr>';
+                return;
+            }
+            officersTableBody.innerHTML = filteredOfficers.map(officer => {
+                const statusClass = officer.is_clocked_in ? 'status-active' : 'status-inactive';
+                const statusText = officer.is_clocked_in ? 'Aktif' : 'Nonaktif';
+                const lastActiveStr = officer.last_active_time ? new Date(officer.last_active_time).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Belum pernah';
+                return `<tr class="hover:bg-emerald-50 transition-colors duration-200">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-emerald-900">${officer.full_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><div class="flex items-center gap-2"><span class="status-dot ${statusClass}"></span><span>${statusText}</span></div></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${lastActiveStr}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right"><button onclick="window.viewOfficerDetails('${officer.id}', '${officer.full_name.replace(/'/g, "\\'")}')" class="text-emerald-600 hover:underline font-semibold">Detail</button></td>
+                </tr>`;
+            }).join('');
+        }
+        
+        async function updateOfficerLocationsOnMap(officers) {
+            Object.keys(officerMarkers).forEach(officerId => {
+                if (!officers.some(o => o.id === officerId && o.is_clocked_in)) {
+                    if(adminMap.hasLayer(officerMarkers[officerId])) adminMap.removeLayer(officerMarkers[officerId]);
+                    delete officerMarkers[officerId];
+                }
+            });
+            const activeOfficerIds = officers.filter(o => o.is_clocked_in).map(o => o.id);
+            if (activeOfficerIds.length === 0) return;
+            const { data: locations, error } = await supabaseClient.rpc('get_latest_officer_locations', { officer_ids: activeOfficerIds });
+            if (error) { console.error("Error fetching latest locations:", error); return; }
+            const customIcon = (officerName) => L.divIcon({ className: 'custom-div-icon', html: `<div class='bg-emerald-600 text-white text-xs font-bold p-1 rounded-full w-8 h-8 flex items-center justify-center border-2 border-white shadow-lg ring-2 ring-emerald-400'>${officerName.substring(0,2).toUpperCase()}</div>`, iconSize: [32, 32], iconAnchor: [16, 16] });
+            locations.forEach(loc => {
+                const officer = officers.find(o => o.id === loc.officer_id);
+                if (!officer) return;
+                const popupContent = `<div class='font-sans'><b class='text-base'>${officer.full_name}</b><br>Update: ${new Date(loc.max_timestamp).toLocaleTimeString('id-ID')}</div>`;
+                if (officerMarkers[loc.officer_id]) officerMarkers[loc.officer_id].setLatLng([loc.latitude, loc.longitude]).setPopupContent(popupContent);
+                else officerMarkers[loc.officer_id] = L.marker([loc.latitude, loc.longitude], { icon: customIcon(officer.full_name) }).addTo(adminMap).bindPopup(popupContent);
+            });
+        }
+
+        async function updateStatistics(officers) {
+            totalOfficersEl.textContent = officers.length;
+            activeOfficersEl.textContent = officers.filter(o => o.is_clocked_in).length;
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const { count, error } = await supabaseClient.from('work_documentation').select('*', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString());
+            docsTodayEl.textContent = error ? 'N/A' : (count || 0);
+        }
+
+        window.viewOfficerDetails = async function(officerId, officerName) {
+            modalOfficerName.textContent = officerName;
+            officerDetailModal.style.display = "block";
+
+            // --- BUG FIX & UX IMPROVEMENT ---
+            // Clear previous content and show loading state immediately
+            const loadingSpinner = `<div class="text-center py-10 text-emerald-500"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-3 text-sm">Memuat data...</p></div>`;
+            modalAttendanceLog.innerHTML = loadingSpinner;
+            modalDocumentation.innerHTML = loadingSpinner;
+            modalLocationHistory.innerHTML = loadingSpinner;
+            
+            // Reset tabs to the first one
+            const modalContent = officerDetailModal.querySelector('.modal-content');
+            modalContent.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            modalContent.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            modalContent.querySelector('.tab-button[data-tab="attendanceLogTab"]').classList.add('active');
+            modalContent.querySelector('#attendanceLogTab').classList.add('active');
+
+            // Fetch all data in parallel
+            const [attendanceRes, docsRes, locationsRes] = await Promise.all([
+                supabaseClient.from('attendance').select('*').eq('officer_id', officerId).order('clock_in_time', { ascending: false }),
+                supabaseClient.from('work_documentation').select('*').eq('officer_id', officerId).order('timestamp', { ascending: false }),
+                supabaseClient.from('officer_locations').select('*').eq('officer_id', officerId).order('timestamp', { ascending: false }).limit(100)
+            ]);
+            
+            // --- RENDER NEW UI ---
+
+            // Render Attendance
+            const { data: attendance, error: attError } = attendanceRes;
+            const noDataMsg = (item) => `<div class="text-center py-10 text-gray-500"><i class="fa-solid fa-folder-open fa-2x"></i><p class="mt-3 text-sm">Tidak ada data ${item}.</p></div>`;
+            const errorMsg = (item) => `<div class="text-center py-10 text-red-500"><i class="fa-solid fa-circle-exclamation fa-2x"></i><p class="mt-3 text-sm">Gagal memuat ${item}.</p></div>`;
+
+            if (attError) modalAttendanceLog.innerHTML = errorMsg('absensi');
+            else if (attendance.length === 0) modalAttendanceLog.innerHTML = noDataMsg('absensi');
+            else modalAttendanceLog.innerHTML = attendance.map(log => {
+                const clockInDate = new Date(log.clock_in_time);
+                const clockInTimeStr = clockInDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const clockOutTimeStr = log.clock_out_time ? new Date(log.clock_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : null;
+                return `
+                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-4">
+                    <div class="text-center w-16">
+                        <p class="font-bold text-emerald-600 text-lg">${clockInDate.toLocaleDateString('id-ID', { day: '2-digit' })}</p>
+                        <p class="text-xs text-gray-500">${clockInDate.toLocaleDateString('id-ID', { month: 'short' })}</p>
+                    </div>
+                    <div class="h-10 border-l border-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-gray-800">
+                                <i class="fa-solid fa-right-to-bracket text-green-500 mr-2"></i>Masuk: ${clockInTimeStr}
+                            </span>
+                            ${clockOutTimeStr ? `
+                                <span class="font-semibold text-gray-800">
+                                    <i class="fa-solid fa-right-from-bracket text-red-500 mr-2"></i>Keluar: ${clockOutTimeStr}
+                                </span>
+                            ` : `
+                                <span class="px-2 py-1 text-xs font-bold text-green-800 bg-green-100 rounded-full">Masih Bekerja</span>
+                            `}
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">
+                            <i class="fa-solid fa-clock mr-2"></i>Durasi: <span class="font-medium">${log.work_duration_ms ? formatDuration(log.work_duration_ms) : '-'}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            // Render Documentation
+            const { data: docs, error: docError } = docsRes;
+            if (docError) modalDocumentation.innerHTML = errorMsg('dokumentasi');
+            else if (docs.length === 0) modalDocumentation.innerHTML = noDataMsg('dokumentasi');
+            else modalDocumentation.innerHTML = docs.map(doc => {
+                const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(doc.photo_path);
+                return `
+                <div class="group bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="relative cursor-pointer" onclick="openLightbox('${publicUrl}')">
+                        <img src="${publicUrl}" alt="Dokumentasi" class="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" onerror="this.src='https://placehold.co/300x200/e2e8f0/475569?text=Error';">
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <i class="fa-solid fa-expand text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <p class="text-sm text-gray-700 truncate">${doc.description || 'Tidak ada deskripsi.'}</p>
+                        <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-calendar-alt mr-1.5"></i>${new Date(doc.timestamp).toLocaleString('id-ID')}</p>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Render Location History
+            const { data: locations, error: locError } = locationsRes;
+            if(locError) modalLocationHistory.innerHTML = errorMsg('riwayat lokasi');
+            else if (locations.length === 0) modalLocationHistory.innerHTML = noDataMsg('riwayat lokasi');
+            else modalLocationHistory.innerHTML = locations.map(loc => `
+                <div class="flex items-start gap-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+                    <i class="fa-solid fa-map-marker-alt text-emerald-500 mt-1"></i>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">${new Date(loc.timestamp).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                        <p class="text-xs text-gray-500 font-mono mt-1">Lat: ${loc.latitude.toFixed(5)}, Lng: ${loc.longitude.toFixed(5)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function formatDuration(ms) {
+            if (!ms) return '-';
+            let s = Math.floor((ms / 1000) % 60), m = Math.floor((ms / (1000 * 60)) % 60), h = Math.floor(ms / (1000 * 60 * 60));
+            return `${String(h).padStart(2, '0')}j ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}d`;
+        }
+
+        window.closeModal = function(modalId) { 
+            const modal = document.getElementById(modalId);
+            if(modal) modal.style.display = "none";
+        }
+
+        window.openLightbox = function(imageUrl) {
+            lightboxImage.src = imageUrl;
+            imageLightboxModal.style.display = "block";
+        }
+        
+        function setupModalTabs() {
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const modalContent = button.closest('.modal-content');
+                    if (!modalContent) return;
+
+                    modalContent.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    modalContent.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                    button.classList.add('active');
+                    const activeTab = modalContent.querySelector('#' + button.dataset.tab);
+                    if (activeTab) {
+                        activeTab.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        function setupRealtimeListeners() {
+            const channel = supabaseClient.channel('admin-dashboard-v5-revamped');
+            channel.on('postgres_changes', { event: '*', schema: 'public' }, payload => {
+                console.log('Perubahan terdeteksi:', payload.table);
+                if (['profiles', 'attendance', 'officer_locations', 'work_documentation'].includes(payload.table)) {
+                    loadAllData();
+                } else if (payload.table === 'laporan') {
+                    loadCitizenReports();
+                }
+            }).subscribe(status => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Terhubung ke channel realtime!');
+                }
+            });
+        }
+
+        // Initialize the application
+        initializeApp();
+    </script>
+</body>
+</html>
